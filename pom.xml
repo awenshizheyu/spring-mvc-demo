@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.ustcinfo.ishare.eip</groupId>
+	<artifactId>spring-mvc-demo</artifactId>
+	<name>spring-mvc-demo</name>
+	<packaging>war</packaging>
+	<version>1.0</version>
+	<description>The parent project of spring-mvc-demo .</description>
+	<inceptionYear>2018</inceptionYear>
+	<organization>
+		<name>ustcinfo</name>
+		<url>http://www.ustcinfo.com/</url>
+	</organization>
+	<properties>
+		<org.springframework-version>4.2.5.RELEASE</org.springframework-version>
+		<org.aspectj-version>1.6.10</org.aspectj-version>
+		<org.slf4j-version>1.6.6</org.slf4j-version>
+		<logback.version>1.1.7</logback.version>
+
+		<!-- other setting -->
+		<jdk.version>1.8</jdk.version>
+		<tomcat.version>2.1</tomcat.version>
+		<jetty.version>8.1.16.v20140903</jetty.version>
+		<webserver.port>8181</webserver.port>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<!--docker setting -->
+		<docker.registry.host>192.168.52.93</docker.registry.host>
+		<docker.registry.port>5000</docker.registry.port>
+	</properties>
+	<dependencies>
+		<!-- Spring -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${org.springframework-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<version>${org.springframework-version}</version>
+		</dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${org.springframework-version}</version>
+        </dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+			<version>${org.springframework-version}</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.46</version>
+		</dependency>
+		<!-- AspectJ -->
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjrt</artifactId>
+			<version>${org.aspectj-version}</version>
+		</dependency>
+
+		<!-- Logging -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${org.slf4j-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<version>1.6.6</version>
+		</dependency>
+		<!-- logback -->
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logback.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+			<version>${logback.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-access</artifactId>
+			<version>${logback.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<!-- LOGGING end -->
+
+		<!-- @Inject -->
+		<dependency>
+			<groupId>javax.inject</groupId>
+			<artifactId>javax.inject</artifactId>
+			<version>1</version>
+		</dependency>
+
+		<!-- Servlet -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet.jsp</groupId>
+			<artifactId>jsp-api</artifactId>
+			<version>2.1</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+			<version>1.2</version>
+		</dependency>
+
+		<!-- Test -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>com.spotify</groupId>
+					<artifactId>docker-maven-plugin</artifactId>
+					<version>0.4.13</version>
+					<configuration>
+						<!--用于指定镜像名称-->
+						<!--<imageName>192.168.52.93:5000/eip/demo:v1.0</imageName>-->
+						<imageName>${docker.registry.host}:${docker.registry.port}/${project.groupId}/${project.artifactId}:v${project.version}</imageName>
+						<!--用于指定Dockerfile的文件路径-->
+						<dockerDirectory>${project.basedir}/src/main/docker</dockerDirectory>
+						<resources>
+							<resource>
+								<targetPath>/</targetPath>
+								<!--用于指定需要复制的根目录，${project.build.directory}表示target目录-->
+								<directory>${project.build.directory}</directory>
+								<!--用于指定需要复制的文件。${project.build.finalName}.jar指的是打包后的jar包文件。-->
+								<!--<include>${project.build.finalName}.jar</include>-->
+								<include>${project.artifactId}.${project.packaging}</include>
+							</resource>
+						</resources>
+						<!-- 只执行build操作： mvn clean package docker:build -->
+						<!-- 执行 build 完成后 push 镜像： mvn clean package docker:build -DpushImage -->
+						<!-- PS: mvn 跳过测试命令: -Dmaven.test.skip=true -->
+					</configuration>
+				</plugin>
+
+				<!-- Compiler 插件, 设定JDK版本 -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>2.5.1</version>
+					<configuration>
+						<source>${jdk.version}</source>
+						<target>${jdk.version}</target>
+						<showWarnings>true</showWarnings>
+					</configuration>
+				</plugin>
+
+				<!-- resource插件 -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-resources-plugin</artifactId>
+					<version>2.6</version>
+				</plugin>
+
+				<!-- install插件 -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-install-plugin</artifactId>
+					<version>2.4</version>
+				</plugin>
+
+				<!-- clean插件 -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-clean-plugin</artifactId>
+					<version>2.5</version>
+				</plugin>
+
+				<!-- dependency插件 -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<version>2.5.1</version>
+				</plugin>
+
+
+				<!-- war 打包插件, 设定war包名称不带版本号 -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>2.3</version>
+					<configuration>
+						<warName>${project.artifactId}</warName>
+					</configuration>
+				</plugin>
+
+				<!-- tomcat7插件 -->
+				<plugin>
+					<groupId>org.apache.tomcat.maven</groupId>
+					<artifactId>tomcat7-maven-plugin</artifactId>
+					<version>${tomcat.version}</version>
+					<configuration>
+						<port>${webserver.port}</port>
+						<path>/${project.artifactId}</path>
+						<uriEncoding>${project.build.sourceEncoding}</uriEncoding>
+					</configuration>
+				</plugin>
+				<!-- jetty插件 -->
+				<plugin>
+					<groupId>org.mortbay.jetty</groupId>
+					<artifactId>jetty-maven-plugin</artifactId>
+					<version>${jetty.version}</version>
+					<configuration>
+						<connectors>
+							<connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+								<port>${webserver.port}</port>
+							</connector>
+						</connectors>
+						<webAppConfig>
+							<contextPath>/${project.artifactId}</contextPath>
+						</webAppConfig>
+						<systemProperties>
+							<systemProperty>
+								<name>org.mortbay.util.URI.charset</name>
+								<value>${project.build.sourceEncoding}</value>
+							</systemProperty>
+						</systemProperties>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-archetype-plugin</artifactId>
+					<version>3.0.1</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>
